@@ -32,15 +32,6 @@ Wave.omega=2*pi*Wave.f; % Angular Frequency
 % k=@(w) w/sp; % Wave Number
 
 % Input the coordinate to mesure
-% R0=input('r-Distance (m) = '); % the r-distance to calculate TVR
-% Z0=input('z-Distance (m) = '); % the z-distance to calculate TVR
-% while (R0<=a)&&(abs(Z0)<=(N*L+(N-1)*g)/2); % The point should be at the outside of the Array
-%     disp('Input valid value of R which is R>a');
-%     R0=input('r-Distance (m) = ');
-%     Z0=input('z-Distance (m) = ');
-% end
-
-% Input the coordinate to mesure
 TVR.R0=2; % the r-distance to calculate TVR
 TVR.Z0=0; % the z-distance to calculate TVR
 
