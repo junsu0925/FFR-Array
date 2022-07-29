@@ -10,6 +10,8 @@ close all
 % parpool(NumOfCore);
 
 %%
+Nb = 21; Nr = 35; Nt = 21;
+NN = [Nb, Nr, Nt];
 
 tic
 %% Input Geometry and Material Inputs of FFR
@@ -32,8 +34,7 @@ NumR=input('Number of FFR = '); % Number of FFR
 %     Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % end
 
-Wave.f = 1000:100:4000;
-% Wave.f = 1000;
+Wave.f = 1000;
 % f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % f=25:1:4000; % Set Frequency Range single
 Wave.omega=2*pi*Wave.f; % Angular Frequency
@@ -75,6 +76,8 @@ Geometry.L = sum(Geometry.RL) + sum(Geometry.g); % Total length of FFR array
 Wave.ka = ((2*pi.*Wave.f)./Material.sp).*Geometry.a; % ka, dimensionless parameter by Been
 Geometry.LaRatio = Geometry.RL./Geometry.a; % L/a ratio, dimensionless parameter by Been
 Geometry.gaRatio = Geometry.g./Geometry.a; % g/a ratio, dimensionless parameter by Been
+% Dimfactor = Material.rhowater*Material.sp*2*pi*a.*L;
+% DimfactorGap = Material.rhowater*Material.sp*2*pi*a.*g;
 
 n=500; % Sum Number (n>50 is enough)
 
@@ -94,8 +97,6 @@ for Count1 = 1 : zlength2 - 1
 end
 clear Lai Lai_temp Count1 Count2
 % Define node m (location)
-
-[Geometry.Line_Sec,Geometry.RealAcuteAngle,Geometry.MagDVector] = HKI_Sub_Geometry(Geometry,NumR);
 
 %% Calculation Admittance Factor and p0 Factor
 Factor.Admittance = Material.rhowater*Material.sp*2*pi*Geometry.a*Geometry.L;
@@ -137,8 +138,24 @@ disp('Calculating Material Parameters is Finished');
 disp('Calculating State variables and T Matrix of the system are Finished');
 
 %% Circuit Parameters about Radiation Impedance
-[z_RMatrix]=Radiation_Impedance(Material.rhowater,Material.sp,Wave.f,Geometry,NumR);
+if NumR == 1
+    [z_RMatrix]=Radiation_Impedance_Single_Subrutine(Material.rhowater,Material.sp,Wave.f,Geometry.a,Geometry.L,NN);
+elseif NumR == 2
+    [z_RMatrix]=Radiation_Impedance_2Array_Subrutine(Material.rhowater,Material.sp,Wave.f,Geometry.a,Geometry.L,NN);
+elseif NumR == 3
+    [z_RMatrix]=Radiation_Impedance_3Array_Subrutine(Material.rhowater,Material.sp,Wave.f,Geometry.a,Geometry.L,NN);
+elseif NumR == 4
+    [z_RMatrix]=Radiation_Impedance_4Array_Subrutine(Material.rhowater,Material.sp,Wave.f,Geometry.a,Geometry.L,NN);
+end
 disp('Importing Raiation Impedance Parameters is Finished');
+
+% %% Circuit Parameters about Radiation Impedance (For Single)
+% [z_RMatrix,exceldata]=RadiationImpedance(rhowater,sp,ka,a,L,zlength1);
+% disp('Importing Raiation Impedance Parameters is Finished');
+
+% %% Circuit Parameters about Radiation Impedance (For 2Array)
+% [z_RMatrix, exceldata]=RadiationImp2Array(rhowater,sp,ka,a,L,zlength1);
+% disp('Importing Raiation Impedance Parameters is Finished');
 
 %% Circuit Parameters of Inner Fluid
 Matrix.zRc = zeros(3,3,NumR);
@@ -429,14 +446,3 @@ set(gca, 'fontsize',16)
 set(gcf, 'color', 'w')
 
 toc
-
-%% Radiation Resistance
-
-for i = 1:length(Wave.ka)
-    Z_11(i,1) = z_RMatrix{1,i}(1,1);
-    Z_12(i,1) = z_RMatrix{1,i}(1,2);
-    Z_13(i,1) = z_RMatrix{1,i}(1,3);
-    Z_22(i,1) = z_RMatrix{1,i}(2,2);
-end
-Z_temp = [Z_11 Z_12 Z_13 Z_22];
-Z = [real(Z_temp) imag(Z_temp)];

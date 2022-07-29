@@ -1,7 +1,5 @@
-function [z_r_For_FFR]=Radiation_Impedance(rho0,c0,totfreq,Geometry)
+function [z_r_For_FFR]=Radiation_Impedance(rho0,c0,totfreq,Geometry,NumR)
 
-radius_a = Geometry.a;
-length_l = Geometry.RL;
 Line_Sec = Geometry.Line_Sec;
 RealAcuteAngle = Geometry.RealAcuteAngle;
 MagDVector = Geometry.MagDVector;
@@ -24,7 +22,7 @@ for NumFreq = 1:length(totfreq)
 
      [InvMat_HKI{1,NumFreq}] = HKI_Sub_CalSurPres(GD, GW);
         
-     [z_r_For_FFR{1,NumFreq}] = HKI_Sub_CalRadImp(InvMat_HKI{1,NumFreq},radius_a,length_l,NN{NumFreq,1});
+     [z_r_For_FFR{1,NumFreq}] = HKI_Sub_CalRadImp(InvMat_HKI{1,NumFreq},Geometry,NN{NumFreq,1},NumR);
 
 end
 close(handler) % 루프가 끝나면 waitbar를 종료한다.
