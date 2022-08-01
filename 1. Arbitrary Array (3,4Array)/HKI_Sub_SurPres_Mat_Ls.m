@@ -193,6 +193,7 @@ for LineNum = 1 : totNumOfLine
     Local_IntError = IntError(LineNum);
     
     parfor num = 1:TotNumPre
+%      for num = 1:TotNumPre
         % Define eto_o, zta_o
         eta_o = etaNode(num);
         zta_o = ztaNode(num);

@@ -33,7 +33,7 @@ NumR=input('Number of FFR = '); % Number of FFR
 % end
 
 Wave.f = 1000:100:4000;
-% Wave.f = 1000;
+% Wave.f = 1600;
 % f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % f=25:1:4000; % Set Frequency Range single
 Wave.omega=2*pi*Wave.f; % Angular Frequency

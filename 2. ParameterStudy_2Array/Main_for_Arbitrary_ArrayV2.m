@@ -631,3 +631,20 @@ shading interp
 % figure (3)
 % dirplot(thetadeg,Ddata); % Plot polar plot based on the plotting programs
 % ExpertD = [thetadeg',Ddata'];
+
+%% Radiation Resistance
+
+for i = 1:31
+    j = 20*i+41;
+    Z_11(i,1) = z_RMatrix{1,j}(1,1);
+    Z_12(i,1) = z_RMatrix{1,j}(1,2);
+    Z_13(i,1) = z_RMatrix{1,j}(1,4);
+    Z_14(i,1) = z_RMatrix{1,j}(1,6);
+    Z_15(i,1) = z_RMatrix{1,j}(1,7);
+    Z_22(i,1) = z_RMatrix{1,j}(2,2);
+    Z_23(i,1) = z_RMatrix{1,j}(2,4);
+    Z_24(i,1) = z_RMatrix{1,j}(2,6);
+    Z_33(i,1) = z_RMatrix{1,j}(4,4);
+end
+Z_temp = [Z_11 Z_12 Z_13 Z_14 Z_15 Z_22 Z_23 Z_24 Z_33];
+Z = [real(Z_temp) imag(Z_temp)];

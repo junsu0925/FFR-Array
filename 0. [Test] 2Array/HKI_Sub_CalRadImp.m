@@ -1,10 +1,19 @@
-function [VF_For_FFR] = HKI_Sub_CalRadImp(InvMat_HKI,Geometry,NN,Num)
+function [VF_For_FFR] = HKI_Sub_CalRadImp(InvMat_HKI,radius_a,length_l,NN)
 
-radius_a = Geometry.a;
-length_l = Geometry.RL;
-gap_g = Geometry.g(1);
+Num = 2;
+% gap_g = Geometry.g(1);
+gap_g = 0.08;
 
-Nb = NN(1); Nt = NN(end);
+Nb = NN(1); Nr = NN(2); Ng = NN(3); Nt = NN(end);
+
+for i = 2 : 2*Num
+    if mod(i,2) == 0
+        NN(i) = Nr;
+    elseif mod(i,2) == 1
+        NN(i) = Ng;  
+    end           
+end
+NN(2*Num+1) = Nt;   
 
 TotNumPre = sum(NN)-2*Num;
 TotNumVel = sum(NN);
@@ -35,7 +44,7 @@ VA_b(1,end) = (3*(Nb-1)-1)/6;
 VA_b = -VA_b.*((2*pi)/(Nb-1)^2);
 
 VA_t(1,1) =(3*(Nt-1)-1)/6;
-VA_t(1,2:Nt-1) = (Nt-2:-1:1);
+VA_t(1,2:Nt-1) = (1:Nt-2);
 VA_t(1,end) = 1/6;
 VA_t = VA_t.*((2*pi)/(Nt-1)^2);
 
