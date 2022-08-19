@@ -1,7 +1,9 @@
 function [NN] = HKI_Sub_GenNodeNumber_Ls(MagDVector,freq,c0)
 % Freq 기준으로 Node 갯수 계산
-SliceNum = 21;
-MinNodeNumber = 21;
+% SliceNum = 21;
+% MinNodeNumber = 21;
+SliceNum = 11;
+MinNodeNumber = 11;
 
 RefCalLen = (c0/freq)/SliceNum;
 NN_temp1 = ceil(MagDVector./RefCalLen);

@@ -32,7 +32,7 @@ NumR=input('Number of FFR = '); % Number of FFR
 %     Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % end
 
-Wave.f = 1000:100:4000;
+Wave.f = 1000:1000:4000;
 % Wave.f = 1600;
 % f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % f=25:1:4000; % Set Frequency Range single
@@ -430,13 +430,29 @@ set(gcf, 'color', 'w')
 
 toc
 
-%% Radiation Resistance
-
-for i = 1:length(Wave.ka)
-    Z_11(i,1) = z_RMatrix{1,i}(1,1);
-    Z_12(i,1) = z_RMatrix{1,i}(1,2);
-    Z_13(i,1) = z_RMatrix{1,i}(1,3);
-    Z_22(i,1) = z_RMatrix{1,i}(2,2);
-end
-Z_temp = [Z_11 Z_12 Z_13 Z_22];
-Z = [real(Z_temp) imag(Z_temp)];
+% %% Single FFR Radiation Resistance
+% 
+% for i = 1:length(Wave.ka)
+%     Z_11(i,1) = z_RMatrix{1,i}(1,1);
+%     Z_12(i,1) = z_RMatrix{1,i}(1,2);
+%     Z_13(i,1) = z_RMatrix{1,i}(1,3);
+%     Z_22(i,1) = z_RMatrix{1,i}(2,2);
+% end
+% Z_temp = [Z_11 Z_12 Z_13 Z_22];
+% Z = [real(Z_temp) imag(Z_temp)];
+% 
+% %% FFR 2 Array Radiation Resistance
+% 
+% for i = 1:length(Wave.ka)
+%     Z_11(i,1) = z_RMatrix{1,i}(1,1);
+%     Z_12(i,1) = z_RMatrix{1,i}(1,2);
+%     Z_13(i,1) = z_RMatrix{1,i}(1,3);
+%     Z_14(i,1) = z_RMatrix{1,i}(1,4);
+%     Z_15(i,1) = z_RMatrix{1,i}(1,5);
+%     Z_22(i,1) = z_RMatrix{1,i}(2,2);
+%     Z_23(i,1) = z_RMatrix{1,i}(2,3);
+%     Z_24(i,1) = z_RMatrix{1,i}(2,4);
+%     Z_33(i,1) = z_RMatrix{1,i}(3,3);
+% end
+% Z_temp = [Z_11 Z_12 Z_13 Z_14 Z_15 Z_22 Z_23 Z_24 Z_33];
+% Z = [real(Z_temp) imag(Z_temp)];

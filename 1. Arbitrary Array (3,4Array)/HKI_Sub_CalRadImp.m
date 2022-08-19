@@ -1,7 +1,7 @@
 function [VF_For_FFR] = HKI_Sub_CalRadImp(InvMat_HKI,Geometry,NN,Num)
 
 radius_a = Geometry.a;
-length_l = Geometry.RL;
+length_l = Geometry.RL(1);
 gap_g = Geometry.g(1);
 
 Nb = NN(1); Nt = NN(end);
