@@ -26,13 +26,15 @@ Material.rhowater=999; % Density of Water
 Material.sp=1500; % Sound Speed at Water
 
 NumR=input('Number of FFR = '); % Number of FFR
-% if NumR == 1
-%     Wave.f=25:1:4000; % Set Frequency Range single
-% else
-%     Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
-% end
+if NumR == 1
+    Wave.f=25:1:4000; % Set Frequency Range single
+else
+    Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
+end
 
-Wave.f = 1000:1000:4000;
+% Wave.f = 25;
+% Wave.f = 1000;
+% Wave.f = 1000:1000:4000;
 % Wave.f = 1600;
 % f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 % f=25:1:4000; % Set Frequency Range single
@@ -259,9 +261,9 @@ for MainCount = 1 : length(Wave.ka)
     % Consturct Matrix zc
     for Count = 1 : NumR
         Matrix.zRc(:,:,Count) = ...
-            [Cavityimp.Rz_1(MainCount,Count), -Cavityimp.Rz_rz(MainCount,Count), -Cavityimp.Rz_2(MainCount,Count);...
-            -Cavityimp.Rz_rz(MainCount,Count), Cavityimp.Rz_rr(MainCount,Count), Cavityimp.Rz_rz(MainCount,Count);...
-            -Cavityimp.Rz_2(MainCount,Count), Cavityimp.Rz_rz(MainCount,Count), Cavityimp.Rz_1(MainCount,Count)];
+            [Cavityimp.Rz_1(MainCount,Count), Cavityimp.Rz_rz(MainCount,Count), -Cavityimp.Rz_2(MainCount,Count);...
+            Cavityimp.Rz_rz(MainCount,Count), Cavityimp.Rz_rr(MainCount,Count), -Cavityimp.Rz_rz(MainCount,Count);...
+            -Cavityimp.Rz_2(MainCount,Count), -Cavityimp.Rz_rz(MainCount,Count), Cavityimp.Rz_1(MainCount,Count)];
     end
     clear Count
     % Consturct Matrix zc
@@ -276,9 +278,9 @@ for MainCount = 1 : length(Wave.ka)
     % Consturct Matrix zgc
     for Count = 1 : NumR-1
         Matrix.zgc(:,:,Count) = ...
-            [Cavityimp.gz_1(MainCount,Count), -Cavityimp.gz_rz(MainCount,Count), -Cavityimp.gz_2(MainCount,Count);...
-            -Cavityimp.gz_rz(MainCount,Count), Cavityimp.gz_rr(MainCount,Count), Cavityimp.gz_rz(MainCount,Count);...
-            -Cavityimp.gz_2(MainCount,Count), Cavityimp.gz_rz(MainCount,Count), Cavityimp.gz_1(MainCount,Count)];
+            [Cavityimp.gz_1(MainCount,Count), Cavityimp.gz_rz(MainCount,Count), -Cavityimp.gz_2(MainCount,Count);...
+            Cavityimp.gz_rz(MainCount,Count), Cavityimp.gz_rr(MainCount,Count), -Cavityimp.gz_rz(MainCount,Count);...
+            -Cavityimp.gz_2(MainCount,Count), -Cavityimp.gz_rz(MainCount,Count), Cavityimp.gz_1(MainCount,Count)];
     end
     clear Count
     % Consturct Matrix zgc
