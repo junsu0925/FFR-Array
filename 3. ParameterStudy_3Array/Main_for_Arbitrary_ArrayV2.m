@@ -22,7 +22,8 @@ rhopzt=7500; % Density of PZT
 rhowater=999; % Density of Water
 sp=1500; % Sound Speed at Water
 
-f=25:5:4000; % Set Frequency Range
+% f=25:5:4000; % Set Frequency Range
+f=1000:50:4000; % Set Frequency Range
 % f=700:5:4000; % Set Frequency Range
 % ff=700:5:4000; % Ser Frequency Range for Table
 
@@ -41,7 +42,7 @@ ka = ((2*pi.*f)./sp).*Geometry.a; % ka, dimensionless parameter by Been
 % kaForTable = ((2*pi.*ff)./sp).*a;
 
 % num=input('Number of FFR = '); % Number of FFR
-num = 2;
+num = 3;
 zlength1=4*num-1; % length of the matrix of array number = N
 zlength2=2*num+1; % length of the matrix of array number = N
 
@@ -52,8 +53,8 @@ zlength=(4*num)-1; % length of the impedance matrix of array number = num
 
 % g=0.08;
 g_ParameterTable = 0.02:0.02:0.2; % Ring Height parameter study table
-% g_Parameter = 0.08; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
-g_Parameter = 0.02:0.02:0.2; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
+g_Parameter = 0.08; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
+% g_Parameter = 0.02:0.02:0.2; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
 
 
 %% Parameter Study Start
@@ -118,7 +119,6 @@ for gpnum = 1:length(g_Parameter)
     [Geometry.Line_Sec,Geometry.RealAcuteAngle,Geometry.MagDVector] = HKI_Sub_Geometry(Geometry,num);
 
 
-
     %% Circuit Parameters of PZT
     % Ignore Electrical Dissipation G0 and Mechanical Damping Rm
     
@@ -166,16 +166,10 @@ for gpnum = 1:length(g_Parameter)
     
     disp('Calculating Circuit Impedance Parameters is Finished');
     
-    %% Circuit Parameters about Radiation Impedance (For 2Array)
-    
-%     [z_RMatrix, exceldata]=RadiationImp2Array(rhowater,sp,ka,a,L,zlength);
-%     disp('Importing Raiation Impedance Parameters is Finished');
     
     %% Circuit Parameters about Radiation Impedance (Table)
-        
-%     [z_RMatrix]=RadiationImp_ParameterStudy(rhowater,sp,ka,a,L,g,zlength,RadiationTable,TableParameter);
-[z_RMatrix]=Radiation_Impedance(rhowater,sp,f,Geometry,num);
-disp('Calculating Raiation Impedance Parameters is Finished');
+    [z_RMatrix]=Radiation_Impedance(rhowater,sp,f,Geometry,num);
+    disp('Calculating Raiation Impedance Parameters is Finished');
     
     %% Calculate Total Admittance
     
@@ -239,7 +233,7 @@ disp('Calculating Raiation Impedance Parameters is Finished');
     
     for i=1:length(ka);
         InversMatrix{1,i} = (inv(z_cMatrix{1,i} + z_PRMatrix{1,i} + z_RMatrix{1,i}));
-        Y_temp = (1i*(2*pi*f(i))*C0) + Admittance_Factor * (VectorT2' * InversMatrix{1,i} * VectorT2 * [1;1]);
+        Y_temp = (1i*(2*pi*f(i))*C0) + Admittance_Factor * (VectorT2' * InversMatrix{1,i} * VectorT2 * ones(num,1));
         for j=1:num
             Y{1,j}(i,1) =  Y_temp(j,1);
         end
@@ -362,7 +356,7 @@ disp('Calculating Raiation Impedance Parameters is Finished');
     for i=1:length(ka);
         %     InversMatrix{1,i} = ((z_cMatrix{1,i} + z_PRMatrix{1,i} + z_RMatrix{1,i})^(-1));
         TVR_ptemp = (p_uMatrix{1,i}.' * eye(length(p_uMatrix{1,i})) + p_wpMatrix{1,i}.' * z_RMatrix{1,i})...
-            * InversMatrix{1,i} * VectorT2 * [1;1];
+            * InversMatrix{1,i} * VectorT2 * ones(num,1);
         TVR_p(i,:) = TVR_Factor .* TVR_ptemp ;
     end
     
@@ -610,19 +604,3 @@ shading interp
 % dirplot(thetadeg,Ddata); % Plot polar plot based on the plotting programs
 % ExpertD = [thetadeg',Ddata'];
 
-%% Radiation Resistance
-
-for i = 1:31
-    j = 20*i+41;
-    Z_11(i,1) = z_RMatrix{1,j}(1,1);
-    Z_12(i,1) = z_RMatrix{1,j}(1,2);
-    Z_13(i,1) = z_RMatrix{1,j}(1,4);
-    Z_14(i,1) = z_RMatrix{1,j}(1,6);
-    Z_15(i,1) = z_RMatrix{1,j}(1,7);
-    Z_22(i,1) = z_RMatrix{1,j}(2,2);
-    Z_23(i,1) = z_RMatrix{1,j}(2,4);
-    Z_24(i,1) = z_RMatrix{1,j}(2,6);
-    Z_33(i,1) = z_RMatrix{1,j}(4,4);
-end
-Z_temp = [Z_11 Z_12 Z_13 Z_14 Z_15 Z_22 Z_23 Z_24 Z_33];
-Z = [real(Z_temp) imag(Z_temp)];

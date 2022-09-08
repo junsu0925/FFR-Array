@@ -32,7 +32,7 @@ else
     Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
 end
 
-% Wave.f = 25;
+Wave.f = 700;
 % Wave.f = 1000;
 % Wave.f = 1000:1000:4000;
 % Wave.f = 1600;
@@ -365,9 +365,9 @@ RLCount = 1;
 gCount = 1;
 for Count = 1 : zlength2
     if Count == 1
-        Matrix.Area(Count, Count) = pi*Geometry.a^2;
+        Matrix.Area(Count, Count) = pi*Geometry.a^2; % 필요 시 부호 수정
     elseif Count == zlength2
-        Matrix.Area(Count, Count) = -pi*Geometry.a^2;
+        Matrix.Area(Count, Count) = -pi*Geometry.a^2; % 필요 시 부호 수정
     elseif rem(Count,2) == 0
         Matrix.Area(Count, Count) = 2*pi*Geometry.a*Geometry.RL(RLCount,1);
         RLCount = RLCount+1;
@@ -380,7 +380,8 @@ clear RLCount gCount Count
 % Consturct Matrix Area
 
 % Consturct Matrix Aspect Ratio
-Matrix.AR = (2*pi*Geometry.a*Geometry.L) * inv(Matrix.Area);
+% Matrix.AR = (2*pi*Geometry.a*Geometry.L) * inv(Matrix.Area);
+Matrix.AR = (2*pi*Geometry.a*Geometry.RL(1,1)) * inv(Matrix.Area);
 % Consturct Matrix Aspect Ratio
 
 TVR.p0 = zeros(length(Wave.ka),1);

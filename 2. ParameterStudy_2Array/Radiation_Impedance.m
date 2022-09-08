@@ -1,14 +1,18 @@
-function [z_r_For_FFR]=Radiation_Impedance(rho0,c0,totfreq,Geometry,NumR)
+function [z_RAMatrix, z_RMatrix]=Radiation_Impedance(rho0,c0,totfreq,Geometry,NumR)
 
 Line_Sec = Geometry.Line_Sec;
 RealAcuteAngle = Geometry.RealAcuteAngle;
 MagDVector = Geometry.MagDVector;
 
 % Construct Radiation Impednace Matrix
-z_r_For_FFR = cell(1,length(totfreq)); % radiation impedance matrix
+z_RAMatrix = cell(1,length(totfreq)); % radiation impedance matrix
+z_RMatrix = cell(1,length(totfreq));
 
 InvMat_HKI = cell(1,length(totfreq)); 
 NN = cell(length(totfreq),1);
+
+etaOb = 0.0; % CHIF Point [0.7 0.7 0.7 0.7 0.7 0.7];
+ztaOb = 0.0; % CHIF Point [0.0 0.3 -0.3 0.1 -0.1 0.4];
 
 handler = waitbar(0,'Initializing waitbar...'); % waitbar를 띄웁니다.
 for NumFreq = 1:length(totfreq)
@@ -18,11 +22,13 @@ for NumFreq = 1:length(totfreq)
         
 %      [GD, GW] = HKI_Sub_SurPres_Mat(freq,c0,rho0,radius_a,length_l,NN{NumFreq,1});
 
-  [GD,GW] = HKI_Sub_SurPres_Mat_Ls(freq,RealAcuteAngle,c0,rho0,Line_Sec,NN{NumFreq,1});
+%   [GD,GW] = HKI_Sub_SurPres_Mat_Ls(freq,RealAcuteAngle,c0,rho0,Line_Sec,NN{NumFreq,1});
 
-     [InvMat_HKI{1,NumFreq}] = HKI_Sub_CalSurPres(GD, GW);
+[GD,GW] = HKI_Sub_SurPres_Mat_Ls_CHIEF(freq,RealAcuteAngle,c0,rho0,Line_Sec,NN{NumFreq,1},etaOb,ztaOb);
+
+     [InvMat_HKI{1,NumFreq}] = HKI_Sub_CalSurPres(GD, GW,etaOb,ztaOb);
         
-     [z_r_For_FFR{1,NumFreq}] = HKI_Sub_CalRadImp(InvMat_HKI{1,NumFreq},Geometry,NN{NumFreq,1},NumR);
+     [z_RAMatrix{1,NumFreq}, z_RMatrix{1,NumFreq}] = HKI_Sub_CalRadImp(InvMat_HKI{1,NumFreq},Geometry,NN{NumFreq,1},NumR);
 
 end
 close(handler) % 루프가 끝나면 waitbar를 종료한다.

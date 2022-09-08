@@ -1,4 +1,4 @@
-function [VF_For_FFR] = HKI_Sub_CalRadImp(InvMat_HKI,Geometry,NN,Num)
+function [z_RAMatrix,z_RMatrix] = HKI_Sub_CalRadImp(InvMat_HKI,Geometry,NN,Num)
 
 radius_a = Geometry.a;
 length_l = Geometry.RL(1);
@@ -95,24 +95,24 @@ switch Num
         HKI_to_FFR_AreaRatio_M(9,9) = radius_a/(2*pi*length_l); 
 end
 
-VF_For_FFR = HKI_to_FFR_AreaRatio_M*GA*InvMat_HKI*T_3B;
+z_RMatrix = HKI_to_FFR_AreaRatio_M*GA*InvMat_HKI*T_3B;
 
 %% Area notation issue (HKI & FFR)
-VF_For_FFR(:,1) = -VF_For_FFR(:,1);
+z_RMatrix(:,1) = -z_RMatrix(:,1);
 
 %% Transform Z_R into Z_aR
 col_zero = zeros(2*Num+1,1);
 row_zero = zeros(1,4*Num-1);
 switch Num                  
     case 2        
-       VF_For_FFR = [VF_For_FFR(:,1:2) col_zero VF_For_FFR(:,3) col_zero VF_For_FFR(:,4:5)];
-       VF_For_FFR = [VF_For_FFR(1:2,:) ; row_zero ; VF_For_FFR(3,:) ; row_zero ; VF_For_FFR(4:5,:)];
+       z_RAMatrix = [z_RMatrix(:,1:2) col_zero z_RMatrix(:,3) col_zero z_RMatrix(:,4:5)];
+       z_RAMatrix = [z_RAMatrix(1:2,:) ; row_zero ; z_RAMatrix(3,:) ; row_zero ; z_RAMatrix(4:5,:)];
     case 3
-       VF_For_FFR = [VF_For_FFR(:,1:2) col_zero VF_For_FFR(:,3) col_zero VF_For_FFR(:,4) col_zero VF_For_FFR(:,5) col_zero VF_For_FFR(:,6:7)];
-       VF_For_FFR = [VF_For_FFR(1:2,:) ; row_zero ; VF_For_FFR(3,:) ; row_zero ; VF_For_FFR(4,:) ; row_zero ; VF_For_FFR(5,:) ; row_zero ; VF_For_FFR(6:7,:)];
+       z_RAMatrix = [z_RMatrix(:,1:2) col_zero z_RMatrix(:,3) col_zero z_RMatrix(:,4) col_zero z_RMatrix(:,5) col_zero z_RMatrix(:,6:7)];
+       z_RAMatrix = [z_RAMatrix(1:2,:) ; row_zero ; z_RAMatrix(3,:) ; row_zero ; z_RAMatrix(4,:) ; row_zero ; z_RAMatrix(5,:) ; row_zero ; z_RAMatrix(6:7,:)];
     case 4
-       VF_For_FFR = [VF_For_FFR(:,1:2) col_zero VF_For_FFR(:,3) col_zero VF_For_FFR(:,4) col_zero VF_For_FFR(:,5) col_zero VF_For_FFR(:,6) col_zero VF_For_FFR(:,7) col_zero VF_For_FFR(:,8:9)];
-       VF_For_FFR = [VF_For_FFR(1:2,:) ; row_zero ; VF_For_FFR(3,:) ; row_zero ; VF_For_FFR(4,:) ; row_zero ; VF_For_FFR(5,:) ; row_zero ; VF_For_FFR(6,:) ; row_zero ; VF_For_FFR(7,:) ; row_zero ; VF_For_FFR(8:9,:)];
+       z_RAMatrix = [z_RMatrix(:,1:2) col_zero z_RMatrix(:,3) col_zero z_RMatrix(:,4) col_zero z_RMatrix(:,5) col_zero z_RMatrix(:,6) col_zero z_RMatrix(:,7) col_zero z_RMatrix(:,8:9)];
+       z_RAMatrix = [z_RAMatrix(1:2,:) ; row_zero ; z_RAMatrix(3,:) ; row_zero ; z_RAMatrix(4,:) ; row_zero ; z_RAMatrix(5,:) ; row_zero ; z_RAMatrix(6,:) ; row_zero ; z_RAMatrix(7,:) ; row_zero ; z_RAMatrix(8:9,:)];
 end
 
 end
