@@ -26,13 +26,13 @@ Material.rhowater=999; % Density of Water
 Material.sp=1500; % Sound Speed at Water
 
 NumR=input('Number of FFR = '); % Number of FFR
-if NumR == 1
-    Wave.f=25:1:4000; % Set Frequency Range single
-else
-    Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
-end
+% if NumR == 1
+%     Wave.f=25:1:4000; % Set Frequency Range single
+% else
+%     Wave.f=25:5:4000;  % Set Frequency Range for Calculate 2Array
+% end
 
-Wave.f = 700;
+Wave.f = 840:5:4000;
 % Wave.f = 1000;
 % Wave.f = 1000:1000:4000;
 % Wave.f = 1600;
@@ -139,9 +139,10 @@ disp('Calculating Material Parameters is Finished');
 disp('Calculating State variables and T Matrix of the system are Finished');
 
 %% Circuit Parameters about Radiation Impedance
-[z_RMatrix]=Radiation_Impedance(Material.rhowater,Material.sp,Wave.f,Geometry,NumR);
+[z_RMatrix,Time_Main_Sub_HKI]=Radiation_Impedance(Material.rhowater,Material.sp,Wave.f,Geometry,NumR);
 disp('Importing Raiation Impedance Parameters is Finished');
 
+tic
 %% Circuit Parameters of Inner Fluid
 Matrix.zRc = zeros(3,3,NumR);
 Matrix.zgc = zeros(3,3,NumR-1);
@@ -318,7 +319,10 @@ for MainCount = 1 : length(Wave.ka)
     end
     clear Count
     % Calculate Admittance
+
 end
+Time_Main_Sub_extra = toc;
+Total_Time = Time_Main_Sub_HKI + Time_Main_Sub_extra;
 % clear z_RMatrix
 disp('Admittance Caclulation is Finished');
 
@@ -431,7 +435,6 @@ ylabel('TVR [dB]','fontsize',20, 'fontangle','italic');
 set(gca, 'fontsize',16)
 set(gcf, 'color', 'w')
 
-toc
 
 % %% Single FFR Radiation Resistance
 % 

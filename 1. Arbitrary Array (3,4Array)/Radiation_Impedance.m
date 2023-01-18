@@ -1,4 +1,5 @@
-function [z_r_For_FFR]=Radiation_Impedance(rho0,c0,totfreq,Geometry,NumR)
+function [z_r_For_FFR,Time_Main_Sub_HKI]=Radiation_Impedance(rho0,c0,totfreq,Geometry,NumR)
+tic
 
 Line_Sec = Geometry.Line_Sec;
 RealAcuteAngle = Geometry.RealAcuteAngle;

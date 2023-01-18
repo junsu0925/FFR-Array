@@ -22,9 +22,10 @@ rhopzt=7500; % Density of PZT
 rhowater=999; % Density of Water
 sp=1500; % Sound Speed at Water
 
+% f=1000:100:4000; % Set Frequency Range
+% f=3000:20:4000; % Set Frequency Range
 % f=25:5:4000; % Set Frequency Range
-f=1000:50:4000; % Set Frequency Range
-% f=700:5:4000; % Set Frequency Range
+f=2.8060e+03*(0.4:0.005:1.4); % Set Frequency Range
 % ff=700:5:4000; % Ser Frequency Range for Table
 
 omega=2*pi*f; % Angular Frequency
@@ -44,7 +45,7 @@ ka = ((2*pi.*f)./sp).*Geometry.a; % ka, dimensionless parameter by Been
 % num=input('Number of FFR = '); % Number of FFR
 num = 3;
 zlength1=4*num-1; % length of the matrix of array number = N
-zlength2=2*num+1; % length of the matrix of array number = N
+zlength2=2*num+1; % lengths of the matrix of array number = N
 
 R0=2; % the r-distance to calculate TVR
 Z0=0; % the z-distance to calculate TVR
@@ -53,9 +54,8 @@ zlength=(4*num)-1; % length of the impedance matrix of array number = num
 
 % g=0.08;
 g_ParameterTable = 0.02:0.02:0.2; % Ring Height parameter study table
-g_Parameter = 0.08; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
-% g_Parameter = 0.02:0.02:0.2; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
-
+% g_Parameter = 0.08; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
+g_Parameter = Geometry.a*(0.2:0.1:1.7); % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
 
 %% Parameter Study Start
 
@@ -119,6 +119,7 @@ for gpnum = 1:length(g_Parameter)
     [Geometry.Line_Sec,Geometry.RealAcuteAngle,Geometry.MagDVector] = HKI_Sub_Geometry(Geometry,num);
 
 
+
     %% Circuit Parameters of PZT
     % Ignore Electrical Dissipation G0 and Mechanical Damping Rm
     
@@ -144,6 +145,10 @@ for gpnum = 1:length(g_Parameter)
     end
     
     disp('Calculating Material Parameters is Finished');
+
+%% State variables and T Matrix of the system
+[StateVector, TMatrix]=StateVaribles_TMatrix_Subrutine(zlength1,zlength2,num);
+disp('Calculating State variables and T Matrix of the system are Finished');
     
     %% Circuit Parameters of Inner Fluid
     [z_rr,z_rz,z_1,z_2,z_PRm]=CavityImpedance(LaRatio,Geometry.t,Geometry.a,ka,rhopzt,rhowater,sp,sE11,n,rootj0dot);
@@ -166,10 +171,16 @@ for gpnum = 1:length(g_Parameter)
     
     disp('Calculating Circuit Impedance Parameters is Finished');
     
+    %% Circuit Parameters about Radiation Impedance (For 2Array)
+    
+%     [z_RMatrix, exceldata]=RadiationImp2Array(rhowater,sp,ka,a,L,zlength);
+%     disp('Importing Raiation Impedance Parameters is Finished');
     
     %% Circuit Parameters about Radiation Impedance (Table)
-    [z_RMatrix]=Radiation_Impedance(rhowater,sp,f,Geometry,num);
-    disp('Calculating Raiation Impedance Parameters is Finished');
+        
+%     [z_RMatrix]=RadiationImp_ParameterStudy(rhowater,sp,ka,a,L,g,zlength,RadiationTable,TableParameter);
+[z_RAMatrix, z_RMatrix]=Radiation_Impedance(rhowater,sp,f,Geometry,num);
+disp('Calculating Raiation Impedance Parameters is Finished');
     
     %% Calculate Total Admittance
     
@@ -232,8 +243,8 @@ for gpnum = 1:length(g_Parameter)
     end
     
     for i=1:length(ka);
-        InversMatrix{1,i} = (inv(z_cMatrix{1,i} + z_PRMatrix{1,i} + z_RMatrix{1,i}));
-        Y_temp = (1i*(2*pi*f(i))*C0) + Admittance_Factor * (VectorT2' * InversMatrix{1,i} * VectorT2 * ones(num,1));
+        InversMatrix{1,i} = (inv(z_cMatrix{1,i} + z_PRMatrix{1,i} + z_RAMatrix{1,i}));
+        Y_temp = (1i*(2*pi*f(i))*C0) + Admittance_Factor * (VectorT2' * InversMatrix{1,i} * VectorT2 * ones(num, 1));
         for j=1:num
             Y{1,j}(i,1) =  Y_temp(j,1);
         end
@@ -339,24 +350,51 @@ for gpnum = 1:length(g_Parameter)
 
     %% Calculate TVR at (r,z) and 1V input
     disp('TVR Calculate is Started');
-    [p_1u, p_r1u, p_r2u, p_2u, p_gu, p_1p, p_r1p, p_r2p, p_gp, p_2p]=Pres_para_2Array(R0,Z0,ka,LaRatio,Geometry.a,L,g);
+
+% Consturct Matrix Area
+Matrix.Area = zeros(zlength2, zlength2);
+RLCount = 1;
+gCount = 1;
+for Count = 1 : zlength2
+    if Count == 1
+        Matrix.Area(Count, Count) = pi*Geometry.a^2; % 필요 시 부호 수정
+    elseif Count == zlength2
+        Matrix.Area(Count, Count) = -pi*Geometry.a^2; % 필요 시 부호 수정
+    elseif rem(Count,2) == 0
+        Matrix.Area(Count, Count) = 2*pi*Geometry.a*Geometry.RL(RLCount,1);
+        RLCount = RLCount+1;
+    else
+        Matrix.Area(Count, Count) = 2*pi*Geometry.a*Geometry.g(gCount,1);
+        gCount = gCount+1;
+    end
+end
+clear RLCount gCount Count
+% Consturct Matrix Area
+
+% Consturct Matrix Aspect Ratio
+% Matrix.AR = (2*pi*Geometry.a*Geometry.L) * inv(Matrix.Area);
+Matrix.AR = (2*pi*Geometry.a*Geometry.RL(1,1)) * inv(Matrix.Area);
+    
+ 
     % Construct Matrix and Vector
     p_uMatrix = cell(1,length(ka)); % p_u Matrix
-    p_wpMatrix = cell(1,length(ka)); % p_wp Matrix
+    p_pMatrix = cell(1,length(ka)); % p_wp Matrix
     
-    for i=1:length(ka);
-        p_uMatrix{1,i} = [p_1u(i); p_r1u(i); 0; p_gu(i); 0; p_r2u(i); p_2u(i)];
-        p_wpMatrix{1,i} = [-(2*LaRatio)*p_1p(i); p_r1p(i); 0; (L/g).* p_gp(i); 0; p_r2p(i); (2*LaRatio)*p_2p(i)];
+    for i=1:length(ka);        
+        [p_uMatrix{1,i},p_pMatrix{1,i}]=P_parameter_Subrutine(R0,Z0,Geometry.Zam,ka(1,i),Geometry.a,Geometry.L,zlength2,Matrix.AR,num);        
     end
-        
+    
     TVR_p = zeros(length(ka),2);
     % InversMatrix= cell(1,length(ka));
     TVR_Factor = N/(2*pi*Geometry.a*L);
     
     for i=1:length(ka);
-        %     InversMatrix{1,i} = ((z_cMatrix{1,i} + z_PRMatrix{1,i} + z_RMatrix{1,i})^(-1));
-        TVR_ptemp = (p_uMatrix{1,i}.' * eye(length(p_uMatrix{1,i})) + p_wpMatrix{1,i}.' * z_RMatrix{1,i})...
-            * InversMatrix{1,i} * VectorT2 * ones(num,1);
+       
+%         TVR_ptemp = (p_uMatrix{1,i}.' * eye(length(p_uMatrix{1,i})) + p_wpMatrix{1,i}.'* Matrix.AR * z_RMatrix{1,i})...
+%             *TMatrix.Tsa* InversMatrix{1,i} * VectorT2 * ones(num, 1);
+        TVR_ptemp = (p_uMatrix{1,i}.' * eye(length(p_uMatrix{1,i})) + p_pMatrix{1,i}.' * z_RAMatrix{1,i})...
+            * InversMatrix{1,i} * VectorT2 * ones(num, 1);
+
         TVR_p(i,:) = TVR_Factor .* TVR_ptemp ;
     end
     
@@ -604,3 +642,19 @@ shading interp
 % dirplot(thetadeg,Ddata); % Plot polar plot based on the plotting programs
 % ExpertD = [thetadeg',Ddata'];
 
+% %% Radiation Resistance
+% 
+% for i = 1:31
+%     j = 20*i+41;
+%     Z_11(i,1) = z_RAMatrix{1,j}(1,1);
+%     Z_12(i,1) = z_RAMatrix{1,j}(1,2);
+%     Z_13(i,1) = z_RAMatrix{1,j}(1,4);
+%     Z_14(i,1) = z_RAMatrix{1,j}(1,6);
+%     Z_15(i,1) = z_RAMatrix{1,j}(1,7);
+%     Z_22(i,1) = z_RAMatrix{1,j}(2,2);
+%     Z_23(i,1) = z_RAMatrix{1,j}(2,4);
+%     Z_24(i,1) = z_RAMatrix{1,j}(2,6);
+%     Z_33(i,1) = z_RAMatrix{1,j}(4,4);
+% end
+% Z_temp = [Z_11 Z_12 Z_13 Z_14 Z_15 Z_22 Z_23 Z_24 Z_33];
+% Z = [real(Z_temp) imag(Z_temp)];

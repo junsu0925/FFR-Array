@@ -22,10 +22,11 @@ rhopzt=7500; % Density of PZT
 rhowater=999; % Density of Water
 sp=1500; % Sound Speed at Water
 
+f=2.8060e+03*(0.3:0.005:1.3);
 % f=1000:100:4000; % Set Frequency Range
 % f=3000:20:4000; % Set Frequency Range
 % f=25:5:4000; % Set Frequency Range
-f=2.8060e+03*(0.4:0.005:1.4); % Set Frequency Range
+% f=700:5:4000; % Set Frequency Range
 % ff=700:5:4000; % Ser Frequency Range for Table
 
 omega=2*pi*f; % Angular Frequency
@@ -43,19 +44,34 @@ ka = ((2*pi.*f)./sp).*Geometry.a; % ka, dimensionless parameter by Been
 % kaForTable = ((2*pi.*ff)./sp).*a;
 
 % num=input('Number of FFR = '); % Number of FFR
-num = 2;
+num = 4;
 zlength1=4*num-1; % length of the matrix of array number = N
-zlength2=2*num+1; % length of the matrix of array number = N
+zlength2=2*num+1; % lengths of the matrix of array number = N
 
 R0=2; % the r-distance to calculate TVR
 Z0=0; % the z-distance to calculate TVR
 % zlength=3+4*(num-1); % length of the impedance matrix of array number = num
 zlength=(4*num)-1; % length of the impedance matrix of array number = num
 
-% g=0.08;
-g_ParameterTable = 0.02:0.02:0.2; % Ring Height parameter study table
-% g_Parameter = 0.08; % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
-g_Parameter = Geometry.a*(0.2:0.1:1.7); % Ring Height, 계산 하고자 하는 gap 의 값 설정, 범위 지정시 parameter study 로 진행됨
+Geometry.RL = zeros(num,1); % Ring Height
+for Count = 1 : num
+    Geometry.RL(Count,1) = L;
+end
+clear Count
+
+if num==1 % Single FFR
+    Geometry.g=0;
+else % Array FFR
+    Geometry.g = zeros(num-1,1); % Gab Height
+    for Count = 1 : num - 1
+        Geometry.g(Count,1) = 0.08;
+    end
+    clear Count
+end
+
+% g_Parameter = 0.08; 
+% g_Parameter_Side = [0.02 0.08:0.02:0.2]; 
+g_Parameter_Center = [0.02 0.08:0.02:0.2]; 
 
 %% Parameter Study Start
 
@@ -63,35 +79,21 @@ g_Parameter = Geometry.a*(0.2:0.1:1.7); % Ring Height, 계산 하고자 하는 gap 의 �
 % TVRSave = zeros(length(f),length(g_Parameter));
 % KaRatioSave = zeros(length(f),length(g_Parameter));
 
-for gpnum = 1:length(g_Parameter)
-    
-    g = g_Parameter(gpnum);
-    
-    gaRatio = g/Geometry.a; % g/a ratio, dimensionless parameter by Been
+% for gpnum = 1:length(g_Parameter_Side)
+for gpnum = 1:length(g_Parameter_Center)
+%     Geometry.g(1,1) = g_Parameter_Side(gpnum);
+%     Geometry.g(3,1) = Geometry.g(1,1);
+    Geometry.g(2,1) = g_Parameter_Center(gpnum);
+        
+    gaRatio = Geometry.g/Geometry.a; % g/a ratio, dimensionless parameter by Been
     LaRatio = L/Geometry.a; % L/a ratio, dimensionless parameter by Been
     Dimfactor = rhowater*sp*2*pi*Geometry.a*L;
-    DimfactorGap = rhowater*sp*2*pi*Geometry.a*g;
+    DimfactorGap = rhowater*sp*2*pi*Geometry.a*Geometry.g(1,1);
     
-    Process = sprintf('Parameter g = %1.3f [m]',g)
+    Process = sprintf('Parameter g = %1.3f [m]',Geometry.g(1,1))
     
     n=100; % Sum Number (n>50 is enough)    
-      
-    Geometry.RL = zeros(num,1); % Ring Height
-    for Count = 1 : num
-        Geometry.RL(Count,1) = L;
-    end
-    clear Count
-    
-    if num==1 % Single FFR
-        Geometry.g=0;
-    else % Array FFR
-        Geometry.g = zeros(num-1,1); % Gab Height
-        for Count = 1 : num - 1
-            Geometry.g(Count,1) = g;
-        end
-        clear Count
-    end
-    
+          
     Geometry.L = sum(Geometry.RL) + sum(Geometry.g); % Total length of FFR array 
     ka = ((2*pi.*f)./sp).*Geometry.a; % ka, dimensionless parameter by Been
     Geometry.LaRatio = Geometry.RL./Geometry.a; % L/a ratio, dimensionless parameter by Been
@@ -117,7 +119,6 @@ for gpnum = 1:length(g_Parameter)
     % Define node m (location)
     
     [Geometry.Line_Sec,Geometry.RealAcuteAngle,Geometry.MagDVector] = HKI_Sub_Geometry(Geometry,num);
-
 
 
     %% Circuit Parameters of PZT
@@ -153,24 +154,23 @@ disp('Calculating State variables and T Matrix of the system are Finished');
     %% Circuit Parameters of Inner Fluid
     [z_rr,z_rz,z_1,z_2,z_PRm]=CavityImpedance(LaRatio,Geometry.t,Geometry.a,ka,rhopzt,rhowater,sp,sE11,n,rootj0dot);
     
-    %% Circuit Parameters about Gap Fluid (if num~=1)
-    if num~=1;
-        [z_rrgap,z_rzgap,z_1gap,z_2gap,~]=CavityImpedance(gaRatio,0,0,ka,rhopzt,rhowater,sp,sE11,n,rootj0dot);
-    else % Single FFR
-        z_rrgap=zeros(1,length(f));
-        z_rzgap=zeros(1,length(f));
-        z_1gap=zeros(1,length(f));
-        z_2gap=zeros(1,length(f));
-    end
-    
-    % Re-Dimension less
-    z_rrgap = z_rrgap.*(g/L);
-    z_rzgap = z_rzgap.*(g/L);
-    z_1gap = z_1gap.*(g/L);
-    z_2gap = z_2gap.*(g/L);
-    
-    disp('Calculating Circuit Impedance Parameters is Finished');
-    
+    %% Circuit Parameters about Gap Fluid 
+    Cavityimp.gz_rr = zeros(length(ka),num-1);
+    Cavityimp.gz_rz = zeros(length(ka),num-1);
+    Cavityimp.gz_1 = zeros(length(ka),num-1);
+    Cavityimp.gz_2 = zeros(length(ka),num-1);
+
+    for Count = 1 : num - 1
+        [gz_rr,gz_rz,gz_1,gz_2,~]=CavityImpedance(gaRatio(Count),0,0,ka,rhopzt,rhowater,sp,sE11,n,rootj0dot);
+        
+        Cavityimp.gz_rr(:,Count) = gz_rr.' .* (Geometry.g(Count)/L);
+        Cavityimp.gz_rz(:,Count) = gz_rz.' .* (Geometry.g(Count)/L);
+        Cavityimp.gz_1(:,Count) = gz_1.' .* (Geometry.g(Count)/L);
+        Cavityimp.gz_2(:,Count) = gz_2.' .* (Geometry.g(Count)/L);
+    end  
+
+disp('Calculating Circuit Impedance Parameters is Finished');
+
     %% Circuit Parameters about Radiation Impedance (For 2Array)
     
 %     [z_RMatrix, exceldata]=RadiationImp2Array(rhowater,sp,ka,a,L,zlength);
@@ -197,12 +197,17 @@ disp('Calculating Raiation Impedance Parameters is Finished');
             % input diagonal data
             if (j==1)||(j==zlength); % First, end diagonal -> Z1
                 z_cMatrix{1,i}(j,j)=z_1(i);
-            elseif mod(j,2)==1; % Odd diagonal except First, end -> Z1+Z1gap
-                z_cMatrix{1,i}(j,j)=z_1(i)+z_1gap(i);
+            elseif (j==3)||(j==5)||(j==11)||(j==13); % Odd diagonal except First, end -> Z1+Z1gap
+%                 z_cMatrix{1,i}(j,j)=z_1(i)+z_1gap(i); 
+                  z_cMatrix{1,i}(j,j)=z_1(i)+Cavityimp.gz_rr(i,1);
+            elseif (j==7)||(j==9); 
+                  z_cMatrix{1,i}(j,j)=z_1(i)+Cavityimp.gz_rr(i,2); 
             elseif mod(j,4)==2; % Radial(cavity)
-                z_cMatrix{1,i}(j,j)=z_rr(i);
-            elseif (mod(j,4)==0); % Radial(gap)
-                z_cMatrix{1,i}(j,j)=z_rrgap(i);
+                z_cMatrix{1,i}(j,j)=z_rr(i);  
+            elseif (j==4)||(j==12); % Radial(Side gap)
+                z_cMatrix{1,i}(j,j)=Cavityimp.gz_rr(i,1);
+            elseif j==8; % Radial(Center gap)
+                z_cMatrix{1,i}(j,j)=Cavityimp.gz_rr(i,2);
             end
             
             % input tridiagonal data
@@ -213,13 +218,20 @@ disp('Calculating Raiation Impedance Parameters is Finished');
                 z_cMatrix{1,i}(j+1,j-1)=-z_2(i);
                 z_cMatrix{1,i}(j,j+1)=z_rz(i);
                 z_cMatrix{1,i}(j+1,j)=z_rz(i);
-            elseif mod(j,4)==0; % data of gap (Center : Zrrgap)
-                z_cMatrix{1,i}(j-1,j)=-z_rzgap(i);
-                z_cMatrix{1,i}(j,j-1)=-z_rzgap(i);
-                z_cMatrix{1,i}(j-1,j+1)=-z_2gap(i);
-                z_cMatrix{1,i}(j+1,j-1)=-z_2gap(i);
-                z_cMatrix{1,i}(j,j+1)=z_rzgap(i);
-                z_cMatrix{1,i}(j+1,j)=z_rzgap(i);
+            elseif (j==4)||(j==12); % data of gap (Side : Zrrgap)
+                z_cMatrix{1,i}(j-1,j)=-Cavityimp.gz_rz(i,1);
+                z_cMatrix{1,i}(j,j-1)=-Cavityimp.gz_rz(i,1);
+                z_cMatrix{1,i}(j-1,j+1)=-Cavityimp.gz_2(i,1);
+                z_cMatrix{1,i}(j+1,j-1)=-Cavityimp.gz_2(i,1);
+                z_cMatrix{1,i}(j,j+1)=Cavityimp.gz_rz(i,1);
+                z_cMatrix{1,i}(j+1,j)=Cavityimp.gz_rz(i,1);
+            elseif (j==8); % data of gap (Center : Zrrgap)
+                z_cMatrix{1,i}(j-1,j)=-Cavityimp.gz_rz(i,2);
+                z_cMatrix{1,i}(j,j-1)=-Cavityimp.gz_rz(i,2);
+                z_cMatrix{1,i}(j-1,j+1)=-Cavityimp.gz_2(i,2);
+                z_cMatrix{1,i}(j+1,j-1)=-Cavityimp.gz_2(i,2);
+                z_cMatrix{1,i}(j,j+1)=Cavityimp.gz_rz(i,2);
+                z_cMatrix{1,i}(j+1,j)=Cavityimp.gz_rz(i,2);
             end
         end
         
@@ -284,7 +296,7 @@ disp('Calculating Raiation Impedance Parameters is Finished');
     % NAN 찾아서 채우기
     
     % gValue == 0.20 & L = 0.1925 계산 오류 보정
-    if (g == 0.20) && (L == 0.1925)
+    if (Geometry.g(1,1) == 0.20) && (L == 0.1925)
         ErrNum = find(f == 3750);
         disp('NAN find!')
         Y(ErrNum,1) = nan;
@@ -295,7 +307,7 @@ disp('Calculating Raiation Impedance Parameters is Finished');
     % gValue == 0.20 & L = 0.1925 계산 오류 보정
     
     % gValue == 0.24 & L = 0.1925 계산 오류 보정
-    if (g == 0.24) && (L == 0.1925)
+    if (Geometry.g(1,1) == 0.24) && (L == 0.1925)
         ErrNum = find(f == 3125);
         disp('NAN find!')
         Y(ErrNum,1) = nan;
@@ -413,7 +425,7 @@ Matrix.AR = (2*pi*Geometry.a*Geometry.RL(1,1)) * inv(Matrix.Area);
     % NAN 찾아서 채우기
     
     % gValue == 0.20 & L = 0.1925 계산 오류 보정
-    if (g == 0.20) && (L == 0.1925)
+    if (Geometry.g(1,1) == 0.20) && (L == 0.1925)
         ErrNum = find(f == 3750);
         disp('NAN find!')
         TVR(ErrNum) = nan;
@@ -422,7 +434,7 @@ Matrix.AR = (2*pi*Geometry.a*Geometry.RL(1,1)) * inv(Matrix.Area);
     % gValue == 0.20 & L = 0.1925 계산 오류 보정
     
     % gValue == 0.24 & L = 0.1925 계산 오류 보정
-    if (g == 0.24) && (L == 0.1925)
+    if (Geometry.g(1,1) == 0.24) && (L == 0.1925)
         ErrNum = find(f == 3125);
         disp('NAN find!')
         TVR(ErrNum) = nan;
@@ -465,8 +477,10 @@ toc
 % SurPlotLaRatioSpline = L_ParameterSpline/a;
 
 figure(3)
-SurPlotgaRatio = g_Parameter/Geometry.a;
-SurPlotgLRatio = g_Parameter/L;
+% SurPlotgaRatio = g_Parameter_Side/Geometry.a;
+% SurPlotgLRatio = g_Parameter_Side/L;
+SurPlotgaRatio = g_Parameter_Center/Geometry.a;
+SurPlotgLRatio = g_Parameter_Center/L;
 [MeshSurPLotka0, MeshSurPlotga] = meshgrid(KaRatio,SurPlotgaRatio);
 [MeshSurPLotka1, MeshSurPlotgL] = meshgrid(KaRatio,SurPlotgLRatio);
 SurRealYData = real(Y1Save.');
